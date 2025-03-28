@@ -1,5 +1,8 @@
-# GEn Analysis
-SBS GEn-II analysis framework. This was initially copied over from Provakar Datta's framework for GMn but has since diverged significantly.
+This repo was taken from Sean Jeffas to utilize the QuasiElastic Script for QA on GEn-II replays.
+
+# Before Using
+
+Change the directories in /incluse/DBparse.h to match your own!!
 
 # Configuration files
 
@@ -41,22 +44,3 @@ QuasiElastic_sim_ana.C
 ```
 
 These files will output a condensed analyzed root file that is much less data than the raw root file. This scripts can take hours to run if you are analyzing hundreds of millions of events.
-
-# Asymmetry Analysis
-
-The asymmetry analysis scripts are located in the directory **scripts/analysis**. These scripts are for GEN physics analysis and focus on making elastic cuts and obtaining asymmetry yields. There are many scripts and all of them have header comments explaining what they do. The main script calculating all the asymmetries is
-```shell
-Full_GEN_analysis.C
-```
-
-This will run all of the asymmetry corrections, however the data must all be checked to ensure that the settings were all appropriate. The list of the most important scripts are as follows:
-
-**accidental_contamination.C**: Calculates the accidental correction.
-
-**Nitrogen_contamination.C**: Calculates the nitrogen correciton.
-
-**pion_contamination.C**: Calculates the pion correction.
-
-**Inelastic_contamination.C**: Calculates the inelastic correction.
-
-**GEN_Extraction.C**: Calculates the proton correction and also finalizes all corrections and writes the results in a text file.
