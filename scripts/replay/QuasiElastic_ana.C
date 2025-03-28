@@ -2,9 +2,9 @@
 //////////////////////////////////////////////////////////
 //   Created by Provakar Datta
 //   Modified by Sean Jeffas, sj9ry@virginia.edu
-//   Last Modified August 7, 2024
-//
-//
+//     Last Modified August 7, 2024
+//   Modified by Kate Evans, ktevans@jlab.org
+//     Last Modified March 28, 2025
 //   The purpose of this script is to take a configuraiton
 //   file for some SBS experiment and to produced some
 //   analyzed output with cuts on good elastic events.
@@ -108,7 +108,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TCut globalcut = kin_info.globalcut;
   TTreeFormula *GlobalCut = new TTreeFormula("GlobalCut", globalcut, C);
 
-  std::cout << globalcut << std::endl;
+  std::cout << "Global cut: " + globalcut << std::endl;
 
   int maxNtr=1000;
   int maxhcal = 100;
@@ -139,12 +139,12 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   setrootvar::setbranch(C, "sbs.hcal", hcalclvar, hcalclvar_mem);
 
   // grinch var
-  double grinch_track, grinch_clus_size, grinch_hit_time[maxhcal], grinch_pmtnum[maxhcal];
+  double grinch_track, grinch_clus_size, grinch_hit_time[maxhcal], grinch_pmtnum[maxhcal], grinch_amp[maxhcal];
   std::vector<std::string> grinchvar = {"trackindex","size"};
   std::vector<void*> grinchvar_mem = {&grinch_track,&grinch_clus_size};
   setrootvar::setbranch(C, "bb.grinch_tdc.clus", grinchvar, grinchvar_mem);
-  std::vector<std::string> grinchvar_hit = {"time","pmtnum"};
-  std::vector<void*> grinchvar_mem_hit = {&grinch_hit_time,&grinch_pmtnum};
+  std::vector<std::string> grinchvar_hit = {"time","pmtnum","amp"};
+  std::vector<void*> grinchvar_mem_hit = {&grinch_hit_time,&grinch_pmtnum,&grinch_amp};
   setrootvar::setbranch(C, "bb.grinch_tdc.hit", grinchvar_hit, grinchvar_mem_hit);
   int grinch_nhits;
   setrootvar::setbranch(C, "Ndata.bb.grinch_tdc.hit","time",&grinch_nhits);
@@ -220,12 +220,14 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TH1F *h_dyHCAL = new TH1F("h_dyHCAL","; y_{HCAL} - y_{exp} (m);",int(hdy_lim[0]),hdy_lim[1],hdy_lim[2]);
 
   // BBCal Histograms
-  TH1F *h_pse = new TH1F("h_pse","; preshower energy [GeV];",100,0.,5.);
+  TH1F *h_pse = new TH1F("h_pse","; preshower energy [GeV];",150,0.,3.);
+  TH1F *h_she = new TH1F("h_she","; shower energy [GeV];",200,0.,4.);
   TH1F *h_eovp = new TH1F("h_eovp","; BBCal best cluster (SH + PS) energy / track momentum;",100,0.5,1.5);
 
   // BB GEM Histograms
 
   // GRINCH Histograms
+  TH2F *h_LE = new TH2F("h_LE", "GRINCH Leading Edge [ns]", 510,0,510,60,-30,30);
 
   // HCal Histograms
   TH2F *h2_rcHCAL = Utilities::TH2FHCALface_rc("h2_rcHCAL");
@@ -304,6 +306,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   int T_grinch_nhits;                 Tout->Branch("grinch_nhits", &T_grinch_nhits, "grinch_nhits/I");
   double T_grinch_hit_time[maxClus];  Tout->Branch("grinch_hit_time", &T_grinch_hit_time, "grinch_hit_time[grinch_nhits]/D");
   double T_grinch_pmtnum[maxClus];    Tout->Branch("grinch_pmtnum", &T_grinch_pmtnum, "grinch_pmtnum[grinch_nhits]/D");
+  double T_grinch_amp[maxClus];       Tout->Branch("grinch_amp", &T_grinch_amp, "grinch_amp[grinch_nhits]/D");
 
   //Timing Information
   double T_coin_time;            Tout->Branch("coin_time", &T_coin_time, "coin_time/D");
@@ -469,6 +472,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     {
       T_grinch_hit_time[iclus] = grinch_hit_time[iclus];
       T_grinch_pmtnum[iclus] = grinch_pmtnum[iclus];
+      T_grinch_amp[iclus] = grinch_amp[iclus];
     }
 
     //Beam helicity information
@@ -649,6 +653,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 	     //}
     } // END W cut and coin cut
 
+    h_LE->Fill(grinch_pmtnum[0],grinch_hit_time[0]);
+
     h_W->Fill(Wrecon);
     // fiducial cut but no W cut
     //if (fiduCut) { //No fiducial cut for GEN
@@ -660,6 +666,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
        if (WCut && coinCut)
        {
          h_pse->Fill(ePS);
+         h_she->Fill(eSH);
          h_eovp->Fill((eSH + ePS) / p[0]);
        }
 
@@ -726,6 +733,10 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   h_pse->SetTitle("Preshower energy with global, W, coin, and spot cuts");
 
   c2->cd(2);
+  h_she->Draw();
+  h_she->SetTitle("Shower energy with global, W, coin, and spot cuts");
+
+  c2->cd(3);
   h_eovp->Draw();
   h_eovp->SetTitle("E/p with global, W, coin, and spot cuts");
 
@@ -739,8 +750,25 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   c3->cd(1);
   h_coin_time->Draw();
-
+  c3->Update();
+  TLine *coinMin = new TLine(coin_min, 0, coin_min, 100000000);
+  coinMin->SetLineColor(kRed);
+  coinMin->Draw();
+  TLine *coinMax = new TLine(coin_max, 0, coin_max, 100000000);
+  coinMax->SetLineColor(kRed);
+  coinMax->Draw();
+  gPad->Update();
   c3->SaveAs("../../plots/HodoPlots.pdf");
+
+  //****************************************************************************
+  // Canvas 4: GRINCH Plots
+
+  TCanvas *c4 = new TCanvas("c4", "Hodo Plots", 1200, 1000);
+  c4->Divide(1,2);
+
+  c4->cd(1);
+  h_LE->Draw("colz");
+  c4->SaveAs("../../plots/GRINCHPlots.pdf");
 
   //****************************************************************************
   // Send to output file
@@ -755,6 +783,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   c1->Write();
   c2->Write();
   c3->Write();
+  c4->Write();
 
   fout->Write();
   sw->Delete();
