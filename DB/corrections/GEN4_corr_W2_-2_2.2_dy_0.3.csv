@@ -1,0 +1,11 @@
+#time accidentals,Asymmetry, Asymmetry Err, Fraction, Fraction Err
+time accidentals,0.0185,0.0156,0.0755,0.0034
+
+#Nitrogen, Fraction, Fraction Err
+Nitrogen,0.0184,0.0051
+
+#pion,Asymmetry, Asymmetry Err, Fraction, Fraction Err
+pion,0.0005,0.0033,0.0092,0.0006
+
+#Inelastic,Asymmetry, Asymmetry Err, Fraction, Fraction Err
+Inelastic,0.0027,0.0022,0.6430,0.0121
