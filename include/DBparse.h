@@ -5,8 +5,8 @@
 namespace DBparse {
 
   // DB directories must be changed for the specific user
-  TString DB_dir = "/w/halla-scshelf2102/sbs/jeffas/GEN_analysis/DB/";
-  TString DB_corr_dir = "/w/halla-scshelf2102/sbs/jeffas/GEN_analysis/DB/corrections/";
+  TString DB_dir = "/w/halla-scshelf2102/sbs/ktevans/GEn_QA/DB/";
+  TString DB_corr_dir = "/w/halla-scshelf2102/sbs/ktevans/GEn_QA/DB/corrections/";
   
   std::map<TString, TString> DBFileMap {
     {"He3 Polarization", "He3_pol.csv"},
