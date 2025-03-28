@@ -108,6 +108,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TCut globalcut = kin_info.globalcut;
   TTreeFormula *GlobalCut = new TTreeFormula("GlobalCut", globalcut, C);
 
+  std::cout << globalcut << std::endl;
+
   int maxNtr=1000;
   int maxhcal = 100;
   const int maxClus = 1000;
@@ -218,6 +220,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TH1F *h_dyHCAL = new TH1F("h_dyHCAL","; y_{HCAL} - y_{exp} (m);",int(hdy_lim[0]),hdy_lim[1],hdy_lim[2]);
 
   // BBCal Histograms
+  TH1F *h_pse = new TH1F("h_pse","; preshower energy [GeV];",100,0.,5.);
+  TH1F *h_eovp = new TH1F("h_eovp","; BBCal best cluster (SH + PS) energy / track momentum;",100,0.5,1.5);
 
   // BB GEM Histograms
 
@@ -230,7 +234,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TH2F *h2_xyHCAL_n = Utilities::TH2FHCALface_xy_data("h2_xyHCAL_n");
 
   // Hodo Histograms
-  TH1F *h_coin_time = new TH1F("h_coin_time", "Coincidence time (ns)", 200, 380, 660);
+  TH1F *h_coin_time = new TH1F("h_coin_time", "Coincidence time (HCal - Hodo) (ns)", 200, 50, 250);
 
   // SBS GEM Histograms
 
@@ -451,7 +455,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
       T_hodo_time[iclus] = hodo_time[iclus];
     }
 
-    double coin_time = atimeHCAL[0] - atimeSH;
+    double coin_time = atimeHCAL[0] - hodo_time[0];
     T_coin_time = coin_time;
     h_coin_time->Fill(coin_time);
 
@@ -652,7 +656,14 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     if (pCut || nCut)
     {
 	     h_W_cut->Fill(Wrecon);
-    }
+
+       if (WCut && coinCut)
+       {
+         h_pse->Fill(ePS);
+         h_eovp->Fill((eSH + ePS) / p[0]);
+       }
+
+    } // END spot cut
     else
     {
 	     h_W_acut->Fill(Wrecon);
@@ -664,31 +675,75 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   std::cout << std::endl << std::endl;
 
-  TCanvas *c1 = new TCanvas("c1", "c1", 1200, 1000);
+  //****************************************************************************
+  // Canvas 1: General Plots
+
+  TCanvas *c1 = new TCanvas("c1", "General Plots", 1200, 1000);
   c1->Divide(2,2);
 
-  c1->cd(1); h2_dxdyHCAL->Draw("colz");
+  c1->cd(1);
+  h2_dxdyHCAL->Draw("colz");
+  h2_dxdyHCAL->SetTitle("dx and dy [m] with W and coin cuts");
   TEllipse Ep_p;
-  Ep_p.SetFillStyle(0); Ep_p.SetLineColor(2); Ep_p.SetLineWidth(2);
+  Ep_p.SetFillStyle(0);
+  Ep_p.SetLineColor(2);
+  Ep_p.SetLineWidth(2);
   Ep_p.DrawEllipse(dy_p[0], dx_p[0], Nsigma_cut_dy_p*dy_p[1], Nsigma_cut_dx_p*dx_p[1], 0,360,0);
   TEllipse Ep_n;
   Ep_n.SetFillStyle(0); Ep_n.SetLineColor(3); Ep_n.SetLineWidth(2);
   Ep_n.DrawEllipse(dy_n[0], dx_n[0], Nsigma_cut_dy_n*dy_n[1], Nsigma_cut_dx_n*dx_n[1], 0,360,0);
 
   c1->cd(2);
-  h_W->Draw(); h_W->SetLineColor(1);
-  h_W_cut->Draw("same"); h_W_cut->SetLineColor(2);
+  h_W->Draw();
+  h_W->SetTitle("W Distribution [GeV], Spot cuts (red) & Anti - Spot cuts (blue)");
+  h_W->SetLineColor(1);
+  h_W_cut->Draw("same");
+  h_W_cut->SetLineColor(2);
   h_W_acut->Draw("same");
 
   c1->cd(3);
   h2_xyHCAL_p->Draw("colz");
+  h2_xyHCAL_p->SetTitle("Protons on HCal - Active Area (Red) & Fiducial Region (Blue)");
   Utilities::DrawArea(hcal_active_area);
   Utilities::DrawArea(hcal_safety_margin,4);
 
   c1->cd(4);
   h2_xyHCAL_n->Draw("colz");
+  h2_xyHCAL_n->SetTitle("Neutrons on HCal - Active Area (Red) & Fiducial Region (Blue)");
   Utilities::DrawArea(hcal_active_area);
   Utilities::DrawArea(hcal_safety_margin,4);
+
+  c1->SaveAs("../../plots/GeneralPlots.pdf");
+
+  //****************************************************************************
+  // Canvas 2: BBCal Plots
+
+  TCanvas *c2 = new TCanvas("c2", "BBCal Plots", 1200, 1000);
+  c2->Divide(2,2);
+
+  c2->cd(1);
+  h_pse->Draw();
+  h_pse->SetTitle("Preshower energy with global, W, coin, and spot cuts");
+
+  c2->cd(2);
+  h_eovp->Draw();
+  h_eovp->SetTitle("E/p with global, W, coin, and spot cuts");
+
+  c2->SaveAs("../../plots/BBCalPlots.pdf");
+
+  //****************************************************************************
+  // Canvas 3: Hodo Plots
+
+  TCanvas *c3 = new TCanvas("c3", "Hodo Plots", 1200, 1000);
+  c3->Divide(2,2);
+
+  c3->cd(1);
+  h_coin_time->Draw();
+
+  c3->SaveAs("../../plots/HodoPlots.pdf");
+
+  //****************************************************************************
+  // Send to output file
 
   cout << "------" << endl;
   cout << " Output file : " << outFile << endl;
@@ -698,6 +753,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   cout << "CPU time elapsed = " << sw->CpuTime() << " s. Real time = " << sw->RealTime() << " s. " << endl << endl;
 
   c1->Write();
+  c2->Write();
+  c3->Write();
 
   fout->Write();
   sw->Delete();

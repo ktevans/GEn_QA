@@ -23,7 +23,7 @@
     "W2max"              : 1.6,
     "dymin"               : -3.0,	
     "dymax"               : 2.5,
-    "coin_time"          : [120,140],	
+    "coin_time"          : [90,110],	
     "rootfile_dir"       : "/volatile/halla/sbs/sbs-gen/GEN_REPLAYS/pass2/TEST/rootfiles/",
     "runnums"            : [2209, 2216, 2222, 2226]   
 }
