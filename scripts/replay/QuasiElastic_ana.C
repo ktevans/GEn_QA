@@ -237,6 +237,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   // Hodo Histograms
   TH1F *h_coin_time = new TH1F("h_coin_time", "Coincidence time (HCal - Hodo) (ns)", 200, 50, 250);
+  TH1F *h_trigElem = new TH1F("h_trigElem", "TDC Trigger Element", 50, 0, 5);
 
   // SBS GEM Histograms
 
@@ -424,10 +425,11 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     {
       if(tdcElem[ihit]==5) bbcal_trig_time=tdcTrig[ihit];
       if(tdcElem[ihit]==0) hcal_trig_time=tdcTrig[ihit];
+      h_trigElem->Fill(tdcElem[ihit]);
     }
 
     //Calculate absolute time of this event
-    double time_interval = 4;  //in ns
+    double time_interval = 2.004;  //in ns, used to be 4, but i think the interval for GEn is 2.004ns
     int time_rel = evtime*time_interval*1e-9 / 60; //in min, rounded
 
     TDatime time_abs(run_time_unix + time_rel * 60); //Add the relative minutes
@@ -659,11 +661,12 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     // fiducial cut but no W cut
     //if (fiduCut) { //No fiducial cut for GEN
     //h_W_cut->Fill(Wrecon);
-    if (pCut || nCut)
+    if (pCut||nCut)
     {
 	     h_W_cut->Fill(Wrecon);
 
-       if (WCut && coinCut)
+	     //if (WCut && coinCut)
+       if (coinCut)
        {
          h_pse->Fill(ePS);
          h_she->Fill(eSH);
@@ -758,12 +761,16 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   coinMax->SetLineColor(kRed);
   coinMax->Draw();
   gPad->Update();
+
+  c3->cd(2);
+  h_trigElem->Draw();
+  
   c3->SaveAs("../../plots/HodoPlots.pdf");
 
   //****************************************************************************
   // Canvas 4: GRINCH Plots
 
-  TCanvas *c4 = new TCanvas("c4", "Hodo Plots", 1200, 1000);
+  TCanvas *c4 = new TCanvas("c4", "GRINCH Plots", 1200, 1000);
   c4->Divide(1,2);
 
   c4->cd(1);
