@@ -57,6 +57,9 @@ void getDB(TString cfg){
 int QuasiElastic_ana(const std::string configfilename, std::string filebase="../outfiles/QE_data")
 {
 
+  double optics_valid_min = -0.35;
+  double optics_valid_min = 0.34;
+
   //****************************************************************************
   // Read in config file and define basic variables
 
@@ -149,8 +152,6 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   int grinch_nhits;
   setrootvar::setbranch(C, "Ndata.bb.grinch_tdc.hit","time",&grinch_nhits);
 
-
-
   // hodoscope
   double hodo_time[maxClus];
   int nhodo_clus;
@@ -158,9 +159,9 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   setrootvar::setbranch(C,"Ndata.bb.hodotdc.clus.bar.tdc","meantime",&nhodo_clus);
 
   // track var
-  double ntrack, p[maxNtr],px[maxNtr],py[maxNtr],pz[maxNtr],xTr[maxNtr],yTr[maxNtr],thTr[maxNtr],phTr[maxNtr],vx[maxNtr],vy[maxNtr],vz[maxNtr],xtgt[maxNtr],ytgt[maxNtr],thtgt[maxNtr],phtgt[maxNtr],xfp[maxNtr],yfp[maxNtr],thfp[maxNtr],phfp[maxNtr];
-  std::vector<std::string> trvar = {"n","p","px","py","pz","vx","vy","vz","tg_x","tg_y","tg_th","tg_ph","r_x","r_y","r_th","r_ph"};
-  std::vector<void*> trvar_mem = {&ntrack,&p,&px,&py,&pz,&vx,&vy,&vz,&xtgt,&ytgt,&thtgt,&phtgt,&xfp,&yfp,&thfp,&phfp};
+  double ntrack,p[maxNtr],px[maxNtr],py[maxNtr],pz[maxNtr],xTr[maxNtr],yTr[maxNtr],thTr[maxNtr],phTr[maxNtr],vx[maxNtr],vy[maxNtr],vz[maxNtr],xtgt[maxNtr],ytgt[maxNtr],thtgt[maxNtr],phtgt[maxNtr],xfp[maxNtr],yfp[maxNtr],thfp[maxNtr],phfp[maxNtr];
+  std::vector<std::string> trvar = {"n","p","px","py","pz","vx","vy","vz","tg_x","tg_y","tg_th","tg_ph","r_x","r_y","r_th","r_ph","x","y"};
+  std::vector<void*> trvar_mem = {&ntrack,&p,&px,&py,&pz,&vx,&vy,&vz,&xtgt,&ytgt,&thtgt,&phtgt,&xfp,&yfp,&thfp,&phfp,&xTr,&yTr};
   setrootvar::setbranch(C,"bb.tr",trvar,trvar_mem);
 
   // tdctrig variable (N/A for simulation)
@@ -220,11 +221,13 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   vector<double> hdy_lim = kin_info.hdy_lim;
   TH1F *h_dxHCAL = new TH1F("h_dxHCAL","; x_{HCAL} - x_{exp} (m);",int(hdx_lim[0]),hdx_lim[1],hdx_lim[2]);
   TH1F *h_dyHCAL = new TH1F("h_dyHCAL","; y_{HCAL} - y_{exp} (m);",int(hdy_lim[0]),hdy_lim[1],hdy_lim[2]);
+  TH1F *h_coin_time_bb = new TH1F("h_coin_time_bb", "Coincidence time (HCal - BBCal) (ns)", 100, -10, 10);
 
   // BBCal Histograms
   TH1F *h_pse = new TH1F("h_pse","; preshower energy [GeV];",150,0.,3.);
   TH1F *h_she = new TH1F("h_she","; shower energy [GeV];",200,0.,4.);
   TH1F *h_eovp = new TH1F("h_eovp","; BBCal best cluster (SH + PS) energy / track momentum;",100,0.5,1.5);
+  TH2F *h_pse_trx = new TH2F("h_pse_trx","; preshower energy [GeV] vs track x [mm];",150,0.0,3.0,110,-0.5,0.6);
 
   // BB GEM Histograms
 
@@ -238,12 +241,14 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TH2F *h2_xyHCAL_n = Utilities::TH2FHCALface_xy_data("h2_xyHCAL_n");
 
   // Hodo Histograms
-  TH1F *h_coin_time = new TH1F("h_coin_time", "Coincidence time (HCal - Hodo) (ns)", 200, 50, 250);
+  TH1F *h_coin_time_hodo = new TH1F("h_coin_time_hodo", "Coincidence time (HCal - Hodo) (ns)", 100, -10, 10);
+  TH1F *h_coin_time_bb = new TH1F("h_coin_time_bb", "Coincidence time (HCal - BBCal) (ns)", 100, -10, 10);
   TH1F *h_trigElem = new TH1F("h_trigElem", "TDC Trigger Element", 50, 0, 5);
 
   // SBS GEM Histograms
 
   // Target Histograms
+  TH1F *h_targ_vz = new TH1F("h_targ_vz", "Target Vertex [mm]", 60, -0.3, 0.3);
 
   //****************************************************************************
   // Defining interesting ROOT tree branches
@@ -285,6 +290,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   double T_trPx;        Tout->Branch("trPx", &T_trPx, "trPx/D");
   double T_trPy;        Tout->Branch("trPy", &T_trPy, "trPy/D");
   double T_trPz;        Tout->Branch("trPz", &T_trPz, "trPz/D");
+  double T_trX;         Tout->Branch("trX", &T_trX, "trX/D");
+  double T_trY;         Tout->Branch("trY", &T_trY, "trY/D");
 
   //BBCAL
   double T_ePS;         Tout->Branch("ePS", &T_ePS, "ePS/D");
@@ -602,6 +609,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     T_trPx = px[0];
     T_trPy = py[0];
     T_trPz = pz[0];
+    T_trX = xTr[0];
+    T_trY = yTr[0];
 
     T_ePS = ePS;
     T_xPS = xPS;
@@ -648,7 +657,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     // Fill Histograms
 
     // W cut and coincidence cut
-    if (WCut && coinCut)
+    if (WCut && coinCut && (xfp-0.9*thfp)<optics_valid_max && (xfp-0.9*thfp)>optics_valid_min)
     {
       // fiducial cut
       //if (fiduCut) { //No fiducial cut for GEN?
@@ -675,7 +684,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     // fiducial cut but no W cut
     //if (fiduCut) { //No fiducial cut for GEN
     //h_W_cut->Fill(Wrecon);
-    if (pCut||nCut)
+    if ((pCut||nCut) && (xfp-0.9*thfp)<optics_valid_max && (xfp-0.9*thfp)>optics_valid_min)
     {
 	     h_W_cut->Fill(Wrecon);
 
@@ -685,6 +694,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
          h_pse->Fill(ePS);
          h_she->Fill(eSH);
          h_eovp->Fill((eSH + ePS) / p[0]);
+         h_pse_trx->Fill(ePS,xTr);
        }
 
     } // END spot cut
