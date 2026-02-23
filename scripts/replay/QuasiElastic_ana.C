@@ -823,12 +823,12 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   c3->cd(1);
   h_coin_time_hodo->Draw();
   c3->Update();
-  TLine *coinMin = new TLine(coin_min, 0, coin_min, 100000000);
-  coinMin->SetLineColor(kRed);
-  coinMin->Draw();
-  TLine *coinMax = new TLine(coin_max, 0, coin_max, 100000000);
-  coinMax->SetLineColor(kRed);
-  coinMax->Draw();
+  TLine *coinMinHodo = new TLine(coin_min, 0, coin_min, 100000000);
+  coinMinHodo->SetLineColor(kRed);
+  coinMinHodo->Draw();
+  TLine *coinMaxHodo = new TLine(coin_max, 0, coin_max, 100000000);
+  coinMaxHodo->SetLineColor(kRed);
+  coinMaxHodo->Draw();
   gPad->Update();
 
   c3->cd(2);
