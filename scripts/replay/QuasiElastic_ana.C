@@ -242,7 +242,6 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   // Hodo Histograms
   TH1F *h_coin_time_hodo = new TH1F("h_coin_time_hodo", "Coincidence time (HCal - Hodo) (ns)", 100, -10, 10);
-  TH1F *h_coin_time_bb = new TH1F("h_coin_time_bb", "Coincidence time (HCal - BBCal) (ns)", 100, -10, 10);
   TH1F *h_trigElem = new TH1F("h_trigElem", "TDC Trigger Element", 50, 0, 5);
 
   // SBS GEM Histograms
@@ -478,7 +477,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
     double coin_time = atimeHCAL[0] - hodo_time[0];
     T_coin_time = coin_time;
-    h_coin_time->Fill(coin_time);
+    h_coin_time_hodo->Fill(coin_time);
 
     coinCut = coin_time > coin_min && coin_time < coin_max;
 
@@ -657,7 +656,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     // Fill Histograms
 
     // W cut and coincidence cut
-    if (WCut && coinCut && (xfp-0.9*thfp)<optics_valid_max && (xfp-0.9*thfp)>optics_valid_min)
+    if (WCut && coinCut && (xfp[0]-0.9*thfp[0])<optics_valid_max && (xfp[0]-0.9*thfp[0])>optics_valid_min)
     {
       // fiducial cut
       //if (fiduCut) { //No fiducial cut for GEN?
@@ -684,7 +683,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     // fiducial cut but no W cut
     //if (fiduCut) { //No fiducial cut for GEN
     //h_W_cut->Fill(Wrecon);
-    if ((pCut||nCut) && (xfp-0.9*thfp)<optics_valid_max && (xfp-0.9*thfp)>optics_valid_min)
+    if ((pCut||nCut) && (xfp[0]-0.9*thfp[0])<optics_valid_max && (xfp[0]-0.9*thfp[0])>optics_valid_min)
     {
 	     h_W_cut->Fill(Wrecon);
 
@@ -694,7 +693,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
          h_pse->Fill(ePS);
          h_she->Fill(eSH);
          h_eovp->Fill((eSH + ePS) / p[0]);
-         h_pse_trx->Fill(ePS,xTr);
+         h_pse_trx->Fill(ePS,xTr[0]);
        }
 
     } // END spot cut
@@ -776,7 +775,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   c3->Divide(2,2);
 
   c3->cd(1);
-  h_coin_time->Draw();
+  h_coin_time_hodo->Draw();
   c3->Update();
   TLine *coinMin = new TLine(coin_min, 0, coin_min, 100000000);
   coinMin->SetLineColor(kRed);
