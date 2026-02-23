@@ -778,11 +778,6 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   c3->cd(2);
   h_trigElem->Draw();
-<<<<<<< HEAD
-
-=======
-  
->>>>>>> 3f21ccfe3ab4fa9b0b8503786df08cd3762574d9
   c3->SaveAs("../../plots/HodoPlots.pdf");
 
   //****************************************************************************
