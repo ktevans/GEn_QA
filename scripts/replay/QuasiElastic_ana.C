@@ -58,7 +58,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 {
 
   double optics_valid_min = -0.35;
-  double optics_valid_min = 0.34;
+  double optics_valid_max = 0.34;
 
   //****************************************************************************
   // Read in config file and define basic variables
