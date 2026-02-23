@@ -227,7 +227,11 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   TH1F *h_pse = new TH1F("h_pse","; preshower energy [GeV];",150,0.,3.);
   TH1F *h_she = new TH1F("h_she","; shower energy [GeV];",200,0.,4.);
   TH1F *h_eovp = new TH1F("h_eovp","; BBCal best cluster (SH + PS) energy / track momentum;",100,0.5,1.5);
-  TH2F *h_pse_trx = new TH2F("h_pse_trx","; preshower energy [GeV] vs track x [mm];",150,0.0,3.0,110,-0.5,0.6);
+  TH2F *h_pse_trx = new TH2F("h_pse_trx","; preshower energy [GeV] vs track x [m];",150,0.0,3.0,110,-0.5,0.6);
+  TH2F *h_pse_try = new TH2F("h_pse_try","; preshower energy [GeV] vs track y [m];",150,0.0,3.0,170,-0.2,0.15);
+  TH2F *h_she_trx = new TH2F("h_she_trx","; shower energy [GeV] vs track x [m];",150,0.0,3.0,110,-0.5,0.6);
+  TH2F *h_she_try = new TH2F("h_she_try","; shower energy [GeV] vs track y [m];",150,0.0,3.0,170,-0.2,0.15);
+  TH2F *h_pse_tote = new TH2F("h_pse_tote","; preshower energy [GeV] vs total BBCal energy [GeV];",150,0.0,3.5,100,1.6,3.8);
 
   // BB GEM Histograms
 
@@ -324,7 +328,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   double T_grinch_amp[maxClus];       Tout->Branch("grinch_amp", &T_grinch_amp, "grinch_amp[grinch_nhits]/D");
 
   //Timing Information
-  double T_coin_time;            Tout->Branch("coin_time", &T_coin_time, "coin_time/D");
+  double T_coin_time_hodo;            Tout->Branch("coin_time_hodo", &T_coin_time_hodo, "coin_time_hodo/D");
   double T_hcal_time;            Tout->Branch("hcal_time", &T_hcal_time, "hcal_time/D");
   //double T_bbcal_time;           Tout->Branch("bbcal_time", &T_bbcal_time, "bbcal_time/D");
   int T_nhodo_clus;              Tout->Branch("nhodo_clus", &T_nhodo_clus, "nhodo_clus/I");
@@ -468,6 +472,8 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     T_hcal_time = atimeHCAL[0];
     T_idblkHCAL = idblkHCAL[0];
     //T_bbcal_time = atimeSH;
+    T_atimePS = atimePS;
+    T_atimeSH = atimeSH;
 
     T_nhodo_clus = nhodo_clus;
     for(int iclus = 0; iclus < nhodo_clus; iclus++)
@@ -475,11 +481,15 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
       T_hodo_time[iclus] = hodo_time[iclus];
     }
 
-    double coin_time = atimeHCAL[0] - hodo_time[0];
-    T_coin_time = coin_time;
-    h_coin_time_hodo->Fill(coin_time);
+    double coin_time_hodo = atimeHCAL[0] - hodo_time[0];
+    T_coin_time_hodo = coin_time_hodo;
+    h_coin_time_hodo->Fill(coin_time_hodo);
 
-    coinCut = coin_time > coin_min && coin_time < coin_max;
+    double coin_time_bb = atimeHCAL[0] - atimeSH;
+    T_coin_time_bb = coin_time_bb;
+    h_coin_time_bb->Fill(coin_time_bb);
+
+    coinCut = coin_time_bb > coin_min && coin_time_bb < coin_max;
 
     //Grinch info
     T_grinch_track = grinch_track;
@@ -614,12 +624,10 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
     T_ePS = ePS;
     T_xPS = xPS;
     T_yPS = yPS;
-    T_atimePS = atimePS;
     T_idPS = idPS;
     T_eSH = eSH;
     T_xSH = xSH;
     T_ySH = ySH;
-    T_atimeSH = atimeSH;
     T_idSH = idSH;
 
     T_eHCAL = eHCAL[0];
@@ -694,6 +702,10 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
          h_she->Fill(eSH);
          h_eovp->Fill((eSH + ePS) / p[0]);
          h_pse_trx->Fill(ePS,xTr[0]);
+         h_pse_try->Fill(ePS,yTr[0]);
+         h_she_trx->Fill(eSH,xTr[0]);
+         h_she_try->Fill(eSH,yTr[0]);
+         h_pse_tote->Fill(ePS,(eSH + ePS));
        }
 
     } // END spot cut
@@ -735,10 +747,19 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   h_W_acut->Draw("same");
 
   c1->cd(3);
-  h2_xyHCAL_p->Draw("colz");
-  h2_xyHCAL_p->SetTitle("Protons on HCal - Active Area (Red) & Fiducial Region (Blue)");
-  Utilities::DrawArea(hcal_active_area);
-  Utilities::DrawArea(hcal_safety_margin,4);
+  h_coin_time_bb->Draw();
+  c1->Update();
+  TLine *coinMin = new TLine(coin_min, 0, coin_min, 100000000);
+  coinMin->SetLineColor(kRed);
+  coinMin->Draw();
+  TLine *coinMax = new TLine(coin_max, 0, coin_max, 100000000);
+  coinMax->SetLineColor(kRed);
+  coinMax->Draw();
+  gPad->Update();
+  //h2_xyHCAL_p->Draw("colz");
+  //h2_xyHCAL_p->SetTitle("Protons on HCal - Active Area (Red) & Fiducial Region (Blue)");
+  //Utilities::DrawArea(hcal_active_area);
+  //Utilities::DrawArea(hcal_safety_margin,4);
 
   c1->cd(4);
   h2_xyHCAL_n->Draw("colz");
@@ -751,7 +772,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   //****************************************************************************
   // Canvas 2: BBCal Plots
 
-  TCanvas *c2 = new TCanvas("c2", "BBCal Plots", 1200, 1000);
+  TCanvas *c2 = new TCanvas("c2", "BBCal Plots I", 1200, 1000);
   c2->Divide(2,2);
 
   c2->cd(1);
@@ -766,7 +787,32 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
   h_eovp->Draw();
   h_eovp->SetTitle("E/p with global, W, coin, and spot cuts");
 
-  c2->SaveAs("../../plots/BBCalPlots.pdf");
+  c2->cd(4);
+  h_pse_tote->Draw("colz");
+  h_pse_tote->SetTitle("Preshower energy vs BBCal energy with global, W, coin, and spot cuts");
+
+  c2->SaveAs("../../plots/BBCalPlotsI.pdf");
+
+  TCanvas *c2_2 = new TCanvas("c2_2", "BBCal Plots II", 1200, 1000);
+  c2_2->Divide(2,2);
+
+  c2_2->cd(1);
+  h_pse_trx->Draw();
+  h_pse_trx->SetTitle("Preshower energy vs Track x with global, W, coin, and spot cuts");
+
+  c2_2->cd(2);
+  h_pse_try->Draw();
+  h_pse_try->SetTitle("Prehower energy vs Track y with global, W, coin, and spot cuts");
+
+  c2_2->cd(3);
+  h_she_trx->Draw();
+  h_she_try->SetTitle("Shower energy vs Track x with global, W, coin, and spot cuts");
+
+  c2_2->cd(4);
+  h_she_trx->Draw();
+  h_she_try->SetTitle("Shower Energy vs Track y with global, W, coin, and spot cuts");
+
+  c2_2->SaveAs("../../plots/BBCalPlotsII.pdf");
 
   //****************************************************************************
   // Canvas 3: Hodo Plots
