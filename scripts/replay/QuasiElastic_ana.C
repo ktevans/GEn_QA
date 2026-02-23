@@ -329,6 +329,7 @@ int QuasiElastic_ana(const std::string configfilename, std::string filebase="../
 
   //Timing Information
   double T_coin_time_hodo;            Tout->Branch("coin_time_hodo", &T_coin_time_hodo, "coin_time_hodo/D");
+  double T_coin_time_bb;            Tout->Branch("coin_time_bb", &T_coin_time_bb, "coin_time_bb/D");
   double T_hcal_time;            Tout->Branch("hcal_time", &T_hcal_time, "hcal_time/D");
   //double T_bbcal_time;           Tout->Branch("bbcal_time", &T_bbcal_time, "bbcal_time/D");
   int T_nhodo_clus;              Tout->Branch("nhodo_clus", &T_nhodo_clus, "nhodo_clus/I");
